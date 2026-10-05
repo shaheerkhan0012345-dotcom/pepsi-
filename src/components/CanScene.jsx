@@ -2,7 +2,11 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
-import { MODEL_CONFIG, canAnimState } from '../state/canState';
+import { MODEL_CONFIG, canAnimState, pourState } from '../state/canState';
+import Glass from './Glass';
+import Ice from './Ice';
+import Stream from './Stream';
+import Bubbles from './Bubbles';
 
 // Preload the GLTF model so it's ready immediately
 useGLTF.preload('/pepsi_can.glb');
@@ -189,48 +193,100 @@ function Model({ isMobile }) {
       cardWorldY = (ndcY * planeHeight) / 2;
     }
 
-    // 5. Interpolate Position based on dockProgress (0 = Hero Center, 1 = Card Center)
-    const targetX = THREE.MathUtils.lerp(canAnimState.heroX, cardWorldX, canAnimState.dockProgress);
-    const targetY = THREE.MathUtils.lerp(canAnimState.heroY, cardWorldY, canAnimState.dockProgress) + canAnimState.dropY + idleFloatY;
-
-    groupRef.current.position.x = THREE.MathUtils.damp(
-      groupRef.current.position.x,
-      targetX,
-      6,
-      safeDelta
-    );
-    groupRef.current.position.y = THREE.MathUtils.damp(
-      groupRef.current.position.y,
-      targetY,
-      6,
-      safeDelta
-    );
-
-    // 6. Rotation:
-    // Base front rotation (1.633 rad) aligns front Pepsi logo to camera
-    // + GSAP scroll rotation
-    // + User interactive drag rotation
-    // + Subtle idle sway
-    // + Mouse hover tilt
+    // 5. Position & Rotation Resolution (Hero -> Section 2 Dock -> Section 3 Pour)
     const BASE_FRONT_Y = MODEL_CONFIG.frontRotationY;
-    const finalRotX = userRotation.current.x - mouseSmooth.current.y;
-    const finalRotY = BASE_FRONT_Y + canAnimState.scrollRotY + userRotation.current.y + idleSwayY + mouseSmooth.current.x;
-    const finalRotZ = canAnimState.scrollRotZ + (mouseSmooth.current.x * 0.15);
 
-    groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, finalRotX, 5, safeDelta);
-    groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, finalRotY, 5, safeDelta);
-    groupRef.current.rotation.z = THREE.MathUtils.damp(groupRef.current.rotation.z, finalRotZ, 5, safeDelta);
+    if (pourState.progress > 0) {
+      // =====================================================================
+      // SECTION 3: "POUR" SEQUENCE (Starts exactly where Section 2 leaves off!)
+      // =====================================================================
+      const pourLiftX = isMobile ? 0.95 : pourState.canPourPos[0];
+      const pourLiftY = isMobile ? 1.25 : pourState.canPourPos[1];
+      const returnX = isMobile ? 1.2 : pourState.canReturnPos[0];
+      const returnY = isMobile ? 0.6 : pourState.canReturnPos[1];
 
-    // 7. Scale:
-    // Hero scale (~1.0) -> Card docked scale (~0.80)
-    const baseHeroScale = isMobile ? 0.72 : 1.0;
-    const baseCardScale = isMobile ? 0.60 : 0.80;
-    const currentBaseScale = THREE.MathUtils.lerp(baseHeroScale, baseCardScale, canAnimState.dockProgress);
-    const finalScale = currentBaseScale * (1 + canAnimState.scrollScaleBonus) * canAnimState.entranceScale;
+      // 0–20%: Lift from Section 2's card position to pour position
+      let targetX = THREE.MathUtils.lerp(cardWorldX, pourLiftX, pourState.canLift);
+      let targetY = THREE.MathUtils.lerp(cardWorldY, pourLiftY, pourState.canLift);
 
-    groupRef.current.scale.setScalar(
-      THREE.MathUtils.damp(groupRef.current.scale.x, finalScale, 5, safeDelta)
-    );
+      // 85–100%: Drift to side
+      if (pourState.canReturn > 0) {
+        targetX = THREE.MathUtils.lerp(targetX, returnX, pourState.canReturn);
+        targetY = THREE.MathUtils.lerp(targetY, returnY, pourState.canReturn);
+      }
+
+      // Pour tilt angle (~110° on Z toward glass)
+      const tiltZ = pourState.canTiltAngle * pourState.canTilt * (1 - pourState.canReturn);
+
+      // Subtle cola flow micro-vibration during active pour (20%–85%)
+      const isFlowing = pourState.streamProgress > 0.5 && pourState.streamWidth > 0.3;
+      const vibeX = isFlowing ? (Math.random() - 0.5) * 0.006 : 0;
+      const vibeY = isFlowing ? (Math.random() - 0.5) * 0.006 : 0;
+
+      groupRef.current.position.x = THREE.MathUtils.damp(
+        groupRef.current.position.x,
+        targetX + vibeX,
+        6,
+        safeDelta
+      );
+      groupRef.current.position.y = THREE.MathUtils.damp(
+        groupRef.current.position.y,
+        targetY + vibeY + idleFloatY * 0.4,
+        6,
+        safeDelta
+      );
+
+      const finalRotX = userRotation.current.x - mouseSmooth.current.y;
+      const finalRotY = BASE_FRONT_Y + canAnimState.scrollRotY + userRotation.current.y + idleSwayY * 0.4 + mouseSmooth.current.x;
+      const finalRotZ = tiltZ + (mouseSmooth.current.x * 0.1);
+
+      groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, finalRotX, 6, safeDelta);
+      groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, finalRotY, 6, safeDelta);
+      groupRef.current.rotation.z = THREE.MathUtils.damp(groupRef.current.rotation.z, finalRotZ, 6, safeDelta);
+
+      // Scale in Section 3
+      const cardScale = isMobile ? 0.60 : 0.80;
+      groupRef.current.scale.setScalar(
+        THREE.MathUtils.damp(groupRef.current.scale.x, cardScale, 5, safeDelta)
+      );
+
+    } else {
+      // =====================================================================
+      // SECTIONS 1 & 2: HERO -> DOCKING INTO CARD
+      // =====================================================================
+      const targetX = THREE.MathUtils.lerp(canAnimState.heroX, cardWorldX, canAnimState.dockProgress);
+      const targetY = THREE.MathUtils.lerp(canAnimState.heroY, cardWorldY, canAnimState.dockProgress) + canAnimState.dropY + idleFloatY;
+
+      groupRef.current.position.x = THREE.MathUtils.damp(
+        groupRef.current.position.x,
+        targetX,
+        6,
+        safeDelta
+      );
+      groupRef.current.position.y = THREE.MathUtils.damp(
+        groupRef.current.position.y,
+        targetY,
+        6,
+        safeDelta
+      );
+
+      const finalRotX = userRotation.current.x - mouseSmooth.current.y;
+      const finalRotY = BASE_FRONT_Y + canAnimState.scrollRotY + userRotation.current.y + idleSwayY + mouseSmooth.current.x;
+      const finalRotZ = canAnimState.scrollRotZ + (mouseSmooth.current.x * 0.15);
+
+      groupRef.current.rotation.x = THREE.MathUtils.damp(groupRef.current.rotation.x, finalRotX, 5, safeDelta);
+      groupRef.current.rotation.y = THREE.MathUtils.damp(groupRef.current.rotation.y, finalRotY, 5, safeDelta);
+      groupRef.current.rotation.z = THREE.MathUtils.damp(groupRef.current.rotation.z, finalRotZ, 5, safeDelta);
+
+      const baseHeroScale = isMobile ? 0.72 : 1.0;
+      const baseCardScale = isMobile ? 0.60 : 0.80;
+      const currentBaseScale = THREE.MathUtils.lerp(baseHeroScale, baseCardScale, canAnimState.dockProgress);
+      const finalScale = currentBaseScale * (1 + canAnimState.scrollScaleBonus) * canAnimState.entranceScale;
+
+      groupRef.current.scale.setScalar(
+        THREE.MathUtils.damp(groupRef.current.scale.x, finalScale, 5, safeDelta)
+      );
+    }
   });
 
   return (
@@ -252,7 +308,8 @@ function Model({ isMobile }) {
 
 /**
  * Main CanScene Component
- * Transparent Three.js canvas setup with studio lighting and shadow ground.
+ * Persistent Transparent Three.js canvas setup with studio lighting, shadow ground,
+ * and Section 3 3D pouring elements (Glass, Ice, Stream, Bubbles).
  */
 export default function CanScene({ isMobile }) {
   return (
@@ -296,8 +353,14 @@ export default function CanScene({ isMobile }) {
       {/* Studio Environment Map for realistic reflections */}
       <Environment preset="city" environmentIntensity={0.85} />
 
-      {/* 3D Model with auto-fit, centering, drag rotation, and dynamic card docking */}
+      {/* 3D Can Model */}
       <Model isMobile={isMobile} />
+
+      {/* NEW SECTION 3: "POUR" 3D Elements */}
+      <Glass isMobile={isMobile} />
+      <Ice isMobile={isMobile} />
+      <Stream isMobile={isMobile} />
+      <Bubbles isMobile={isMobile} />
     </Canvas>
   );
 }

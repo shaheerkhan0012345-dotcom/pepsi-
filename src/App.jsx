@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import PourSection from './components/PourSection';
 import CanScene from './components/CanScene';
 import Loader from './components/Loader';
 
@@ -71,20 +72,21 @@ export default function App() {
         </Suspense>
       </div>
 
-      {/* Hero and Product Sections */}
+      {/* Hero, Product, and Pour Sections */}
       <main className="relative z-10">
         <Suspense fallback={null}>
           <Hero isLoaded={isLoaded} isMobile={isMobile} navRef={navRef} />
+          <PourSection isMobile={isMobile} />
         </Suspense>
       </main>
 
       {/* Minimal Footer */}
-      <footer className="relative z-30 border-t border-[#0B0B0F]/10 py-8 px-6 bg-[#E3DFD7] text-[#0B0B0F]/50 font-mono text-xs text-center flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto gap-4">
+      <footer className="relative z-30 border-t border-[#0B0B0F]/10 py-8 px-6 bg-[#000000] text-white/50 font-mono text-xs text-center flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto gap-4">
         <span>PEPSI® IS A REGISTERED TRADEMARK OF PEPSICO, INC.</span>
         <div className="flex items-center gap-6">
-          <a href="#" className="hover:text-[#0B0B0F]">PRIVACY</a>
-          <a href="#" className="hover:text-[#0B0B0F]">TERMS</a>
-          <a href="#" className="hover:text-[#0B0B0F]">PRESS ROOM</a>
+          <a href="#" className="hover:text-white">PRIVACY</a>
+          <a href="#" className="hover:text-white">TERMS</a>
+          <a href="#" className="hover:text-white">PRESS ROOM</a>
         </div>
       </footer>
     </div>
