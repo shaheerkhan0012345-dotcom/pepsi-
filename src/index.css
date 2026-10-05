@@ -59,35 +59,27 @@ html.lenis, html.lenis body {
   background: #E32934;
 }
 
-/* Smooth Navbar Dark Mode Adaptation */
+/* Clean White Translucent Navbar */
 #main-navbar {
-  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(11, 11, 15, 0.08) !important;
+  color: #0B0B0F !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
-#main-navbar.nav-dark {
-  background-color: rgba(11, 11, 15, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
+#main-navbar a,
+#main-navbar span {
+  color: #0B0B0F;
 }
 
-#main-navbar.nav-dark a,
-#main-navbar.nav-dark span,
-#main-navbar.nav-dark nav a {
-  color: #F2F0EB;
+#main-navbar nav a {
+  color: rgba(11, 11, 15, 0.7);
 }
 
-#main-navbar.nav-dark span.text-\[\#0B0B0F\]\/50,
-#main-navbar.nav-dark nav a {
-  color: rgba(242, 240, 235, 0.65);
+#main-navbar nav a:hover,
+#main-navbar span.font-pixel:hover {
+  color: #0A4DA3;
 }
 
-#main-navbar.nav-dark nav a:hover,
-#main-navbar.nav-dark span.font-pixel:hover {
-  color: #38bdf8;
-}
-
-#main-navbar.nav-dark div.border-\[\#0B0B0F\]\/10 {
-  border-color: rgba(255, 255, 255, 0.18);
-  color: rgba(242, 240, 235, 0.7);
-}

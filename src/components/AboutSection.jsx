@@ -48,37 +48,28 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
   const paragraphRef = useRef(null);
 
   useLayoutEffect(() => {
-    // Wait until loader finishes so Hero pin measurements are in place
-    if (isLoaded === false) return;
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let splitInstance = null;
-    let isCancelled = false;
 
-    // Ensure DOM is in pristine, single-copy state before GSAP runs
-    if (headlineRef.current) {
+    const ctx = gsap.context(() => {
+      if (!headlineRef.current || !sectionRef.current) return;
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // 1. Reset inner HTML to clean text
       headlineRef.current.innerHTML = RAW_HEADLINE_HTML;
-    }
 
-    const ctx = gsap.context((self) => {
-      // =====================================================================
-      // 1. PREFERS-REDUCED-MOTION HANDLING
-      // =====================================================================
+      // 2. Reduce motion handling: show fully blue with no pin
       if (prefersReducedMotion) {
-        if (headlineRef.current) {
-          gsap.set(headlineRef.current, {
-            color: ABOUT_CONFIG.fillColor,
-            textShadow: ABOUT_CONFIG.glowColor,
-          });
-        }
+        gsap.set(headlineRef.current, {
+          color: ABOUT_CONFIG.fillColor,
+          textShadow: ABOUT_CONFIG.glowColor,
+        });
         if (labelRef.current) gsap.set(labelRef.current, { opacity: 1, y: 0 });
         if (paragraphRef.current) gsap.set(paragraphRef.current, { opacity: 1, y: 0 });
         return;
       }
 
-      // =====================================================================
-      // 2. SUPPORTING LABEL ENTRANCE ANIMATION
-      // =====================================================================
+      // 3. Supporting label entrance
       if (labelRef.current) {
         gsap.fromTo(
           labelRef.current,
@@ -97,125 +88,100 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
         );
       }
 
-      // =====================================================================
-      // 3. FONT-READY SPLITTEXT & PINNED BLUE FILL ANIMATION
-      // =====================================================================
-      document.fonts.ready.then(() => {
-        if (isCancelled || self.isReverted || !headlineRef.current || !sectionRef.current) return;
-
-        self.add(() => {
-          // Re-verify pristine innerHTML so exactly 1 instance exists (no duplicate text)
-          headlineRef.current.innerHTML = RAW_HEADLINE_HTML;
-
-          // Split directly on headlineRef.current with deepSlice: false to prevent duplicate cloning
-          splitInstance = new SplitText(headlineRef.current, {
-            type: 'words,chars',
-            charsClass: 'split-char inline-block select-none',
-            wordsClass: 'split-word inline-block whitespace-nowrap',
-            deepSlice: false,
-          });
-
-          const validChars = splitInstance.chars.filter(
-            (c) => c && c.textContent && c.textContent.trim() !== ''
-          );
-
-          // All letters start in soft dim gray (#C4C4CD)
-          gsap.set(validChars, {
-            color: ABOUT_CONFIG.initialColor,
-            textShadow: 'none',
-          });
-
-          // Master Pinned Timeline: pins when reaching top of viewport
-          const pinTl = gsap.timeline({
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top top',
-              end: ABOUT_CONFIG.pinLength,
-              pin: true,
-              pinSpacing: true,
-              scrub: ABOUT_CONFIG.scrubAmount,
-              anticipatePin: 1,
-              invalidateOnRefresh: true,
-            },
-          });
-
-          // PHASE A (0.06 -> 0.65): Text animation runs while section is STOPPED (pinned)
-          const fillDuration = ABOUT_CONFIG.fillEnd - ABOUT_CONFIG.fillStart;
-          const charDuration = 0.035;
-          const charStagger = (fillDuration - charDuration) / Math.max(1, validChars.length - 1);
-
-          // Sequential character fill from first to last (fully reversible)
-          pinTl.to(
-            validChars,
-            {
-              color: ABOUT_CONFIG.fillColor,
-              textShadow: ABOUT_CONFIG.glowColor,
-              duration: charDuration,
-              stagger: charStagger,
-              ease: 'none',
-            },
-            ABOUT_CONFIG.fillStart
-          );
-
-          // Supporting paragraph fades in smoothly alongside headline (0.40 -> 0.65)
-          if (paragraphRef.current) {
-            pinTl.fromTo(
-              paragraphRef.current,
-              {
-                opacity: 0,
-                y: 18,
-              },
-              {
-                opacity: 1,
-                y: 0,
-                duration: ABOUT_CONFIG.paragraphFadeEnd - ABOUT_CONFIG.paragraphFadeStart,
-                ease: 'power2.out',
-              },
-              ABOUT_CONFIG.paragraphFadeStart
-            );
-          }
-
-          // PHASE B (0.65 -> 0.85): Generous hold buffer:
-          // The section STAYS STOPPED (pinned) so the user can clearly see and admire
-          // the completed electric blue statement
-          pinTl.to({}, { duration: 0.01 }, ABOUT_CONFIG.holdEnd);
-
-          // PHASE C (0.85 -> 1.00): Clean Exit Dissolve:
-          // As the pin completes, contentWrapper smoothly fades out to 0.
-          // This guarantees that when the section unpins, NO TEXT remains visible or
-          // reappears after the section ends!
-          if (contentWrapperRef.current) {
-            pinTl.to(
-              contentWrapperRef.current,
-              {
-                opacity: 0,
-                y: -24,
-                duration: ABOUT_CONFIG.exitEnd - ABOUT_CONFIG.holdEnd,
-                ease: 'power2.inOut',
-              },
-              ABOUT_CONFIG.holdEnd
-            );
-          }
-
-          // Recalculate ScrollTrigger measurements with exact rendered typography
-          ScrollTrigger.refresh();
-
-          return () => {
-            if (splitInstance) {
-              splitInstance.revert();
-              splitInstance = null;
-            }
-          };
-        });
+      // 4. Create SplitText cleanly on headline
+      splitInstance = new SplitText(headlineRef.current, {
+        type: 'words,chars',
+        charsClass: 'split-char inline-block select-none',
+        wordsClass: 'split-word inline-block whitespace-nowrap',
+        deepSlice: false,
       });
+
+      const validChars = splitInstance.chars.filter(
+        (c) => c && c.textContent && c.textContent.trim() !== ''
+      );
+
+      // Start all characters in soft unilluminated gray on white (#C4C4CD)
+      gsap.set(validChars, {
+        color: ABOUT_CONFIG.initialColor,
+        textShadow: 'none',
+      });
+
+      // 5. MASTER PINNED TIMELINE: SECTION FIRMLY STICKS (PINS) AT TOP TOP!
+      const pinTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: ABOUT_CONFIG.pinLength,
+          pin: true,
+          pinSpacing: true,
+          scrub: ABOUT_CONFIG.scrubAmount,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      // PHASE A (0.06 -> 0.65): Letters fill with electric blue (#1E6BFF) while section is stuck
+      const fillDuration = ABOUT_CONFIG.fillEnd - ABOUT_CONFIG.fillStart;
+      const charDuration = 0.035;
+      const charStagger = (fillDuration - charDuration) / Math.max(1, validChars.length - 1);
+
+      pinTl.to(
+        validChars,
+        {
+          color: ABOUT_CONFIG.fillColor,
+          textShadow: ABOUT_CONFIG.glowColor,
+          duration: charDuration,
+          stagger: charStagger,
+          ease: 'none',
+        },
+        ABOUT_CONFIG.fillStart
+      );
+
+      // Supporting paragraph fades in smoothly alongside headline (0.40 -> 0.65)
+      if (paragraphRef.current) {
+        pinTl.fromTo(
+          paragraphRef.current,
+          {
+            opacity: 0,
+            y: 18,
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: ABOUT_CONFIG.paragraphFadeEnd - ABOUT_CONFIG.paragraphFadeStart,
+            ease: 'power2.out',
+          },
+          ABOUT_CONFIG.paragraphFadeStart
+        );
+      }
+
+      // PHASE B (0.65 -> 0.85): Generous hold buffer:
+      // The section STAYS STUCK (pinned) so the user can clearly see and admire
+      // the completed electric blue statement
+      pinTl.to({}, { duration: 0.01 }, ABOUT_CONFIG.holdEnd);
+
+      // PHASE C (0.85 -> 1.00): Clean Exit Dissolve:
+      // Content smoothly fades out before pin releases so no text repeats after section ends
+      if (contentWrapperRef.current) {
+        pinTl.to(
+          contentWrapperRef.current,
+          {
+            opacity: 0,
+            y: -20,
+            duration: ABOUT_CONFIG.exitEnd - ABOUT_CONFIG.holdEnd,
+            ease: 'power2.inOut',
+          },
+          ABOUT_CONFIG.holdEnd
+        );
+      }
     }, sectionRef);
 
-    // Refresh ScrollTrigger after Hero pin spacing settles
-    const refreshTimer1 = setTimeout(() => ScrollTrigger.refresh(), 150);
-    const refreshTimer2 = setTimeout(() => ScrollTrigger.refresh(), 600);
+    // Refresh ScrollTrigger when fonts are loaded and when Hero pin is mounted
+    document.fonts.ready.then(() => ScrollTrigger.refresh());
+    const refreshTimer1 = setTimeout(() => ScrollTrigger.refresh(), 100);
+    const refreshTimer2 = setTimeout(() => ScrollTrigger.refresh(), 500);
 
     return () => {
-      isCancelled = true;
       clearTimeout(refreshTimer1);
       clearTimeout(refreshTimer2);
       if (splitInstance) {

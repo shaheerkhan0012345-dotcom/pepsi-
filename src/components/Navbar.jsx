@@ -12,7 +12,7 @@ export default function Navbar({ navRef }) {
     <header
       ref={navRef}
       id="main-navbar"
-      className="fixed top-0 left-0 w-full z-40 backdrop-blur-md bg-[#F2F0EB]/75 border-b border-[#0B0B0F]/10 transition-all duration-300"
+      className="fixed top-0 left-0 w-full z-40 backdrop-blur-md bg-white/85 border-b border-[#0B0B0F]/10 transition-all duration-300 shadow-sm"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
