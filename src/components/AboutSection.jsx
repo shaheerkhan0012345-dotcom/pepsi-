@@ -11,7 +11,7 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 const RAW_HEADLINE_HTML = 'WELCOME TO PEPSI<br />WHERE COLD<br />MEETS ELECTRIC';
 
 /**
- * Tunable Configuration for AboutSection Pinned Text Fill Animation
+ * Tunable Configuration for AboutSection Pinned Text Fill Animation (White Background)
  */
 export const ABOUT_CONFIG = {
   // Pinning settings
@@ -22,28 +22,26 @@ export const ABOUT_CONFIG = {
   fillStart: 0.06,                      // Holds unilluminated at 0-6% so user sees section has stopped
   fillEnd: 0.65,                        // Text fill fully completes by 65% of the pinned scroll
   holdEnd: 0.85,                        // Holds completed electric blue state from 65% to 85%
-  exitEnd: 1.00,                        // Content & dark background smoothly fade out from 85% to 100%
+  exitEnd: 1.00,                        // Content smoothly fades out from 85% to 100%
 
-  // Colors & Aesthetics
-  initialColor: '#3a3a44',              // Dim gray starting color for unilluminated letters
+  // Colors & Aesthetics on White Background
+  initialColor: '#C4C4CD',              // Soft dim gray starting color for unilluminated letters on white
   fillColor: '#1E6BFF',                 // Vibrant electric blue color when illuminated
-  glowColor: '0 0 24px rgba(30, 107, 255, 0.55)', // Electric blue glow/shadow
+  glowColor: '0 0 24px rgba(30, 107, 255, 0.40)', // Electric blue luminous aura
 
   // Supporting Elements
-  labelColor: '#9A9AA3',                // 'ABOUT PEPSI' label color
-  paragraphColor: '#B8B8C0',            // 40-word brand narrative paragraph color
+  labelColor: '#6B6B78',                // 'ABOUT PEPSI' label color
+  paragraphColor: '#383844',            // Crisp readable brand narrative paragraph color
   paragraphFadeStart: 0.40,             // Paragraph starts fading in at 40% of scroll
   paragraphFadeEnd: 0.65,               // Paragraph fully visible by 65% alongside headline
 
-  // Background and Theming
-  bgDark: '#0B0B0F',                    // Near-black section background
-  bgLight: '#F2F0EB',                   // Off-white transition background
-  grainOpacity: 0.04,                   // 4% film grain opacity
+  // Background Settings
+  bgColor: '#F2F0EB',                   // Warm off-white / white background matching site
+  grainOpacity: 0.03,                   // 3% subtle film grain
 };
 
 export default function AboutSection({ isLoaded = true, isMobile }) {
   const sectionRef = useRef(null);
-  const bgLayerRef = useRef(null);
   const contentWrapperRef = useRef(null);
   const labelRef = useRef(null);
   const headlineRef = useRef(null);
@@ -64,37 +62,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
 
     const ctx = gsap.context((self) => {
       // =====================================================================
-      // 1. BACKGROUND ENTRY SCRUB & NAVBAR THEME
-      // =====================================================================
-      // Entry: scrub from off-white (#F2F0EB) to near-black (#0B0B0F)
-      gsap.fromTo(
-        bgLayerRef.current,
-        { opacity: 0 },
-        {
-          opacity: 1,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top bottom',
-            end: 'top top',
-            scrub: true,
-          },
-        }
-      );
-
-      // Navbar theme toggle: switch to dark mode while inside this section
-      ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: 'top 35%',
-        end: () => `+=${window.innerHeight * 2.85}`,
-        onEnter: () => document.getElementById('main-navbar')?.classList.add('nav-dark'),
-        onLeave: () => document.getElementById('main-navbar')?.classList.remove('nav-dark'),
-        onEnterBack: () => document.getElementById('main-navbar')?.classList.add('nav-dark'),
-        onLeaveBack: () => document.getElementById('main-navbar')?.classList.remove('nav-dark'),
-      });
-
-      // =====================================================================
-      // 2. PREFERS-REDUCED-MOTION HANDLING
+      // 1. PREFERS-REDUCED-MOTION HANDLING
       // =====================================================================
       if (prefersReducedMotion) {
         if (headlineRef.current) {
@@ -105,12 +73,11 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
         }
         if (labelRef.current) gsap.set(labelRef.current, { opacity: 1, y: 0 });
         if (paragraphRef.current) gsap.set(paragraphRef.current, { opacity: 1, y: 0 });
-        if (bgLayerRef.current) gsap.set(bgLayerRef.current, { opacity: 1 });
         return;
       }
 
       // =====================================================================
-      // 3. SUPPORTING LABEL ENTRANCE ANIMATION
+      // 2. SUPPORTING LABEL ENTRANCE ANIMATION
       // =====================================================================
       if (labelRef.current) {
         gsap.fromTo(
@@ -131,7 +98,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
       }
 
       // =====================================================================
-      // 4. FONT-READY SPLITTEXT & PINNED BLUE FILL ANIMATION
+      // 3. FONT-READY SPLITTEXT & PINNED BLUE FILL ANIMATION
       // =====================================================================
       document.fonts.ready.then(() => {
         if (isCancelled || self.isReverted || !headlineRef.current || !sectionRef.current) return;
@@ -152,7 +119,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
             (c) => c && c.textContent && c.textContent.trim() !== ''
           );
 
-          // All letters start in dim gray (#3a3a44)
+          // All letters start in soft dim gray (#C4C4CD)
           gsap.set(validChars, {
             color: ABOUT_CONFIG.initialColor,
             textShadow: 'none',
@@ -210,11 +177,11 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
 
           // PHASE B (0.65 -> 0.85): Generous hold buffer:
           // The section STAYS STOPPED (pinned) so the user can clearly see and admire
-          // the completed electric blue statement ("it should be seen properly completed")
+          // the completed electric blue statement
           pinTl.to({}, { duration: 0.01 }, ABOUT_CONFIG.holdEnd);
 
           // PHASE C (0.85 -> 1.00): Clean Exit Dissolve:
-          // As the pin completes, contentWrapper and bgLayer smoothly fade out to 0.
+          // As the pin completes, contentWrapper smoothly fades out to 0.
           // This guarantees that when the section unpins, NO TEXT remains visible or
           // reappears after the section ends!
           if (contentWrapperRef.current) {
@@ -223,18 +190,6 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
               {
                 opacity: 0,
                 y: -24,
-                duration: ABOUT_CONFIG.exitEnd - ABOUT_CONFIG.holdEnd,
-                ease: 'power2.inOut',
-              },
-              ABOUT_CONFIG.holdEnd
-            );
-          }
-
-          if (bgLayerRef.current) {
-            pinTl.to(
-              bgLayerRef.current,
-              {
-                opacity: 0,
                 duration: ABOUT_CONFIG.exitEnd - ABOUT_CONFIG.holdEnd,
                 ease: 'power2.inOut',
               },
@@ -279,23 +234,16 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
       ref={sectionRef}
       id="about"
       className="relative w-full h-screen min-h-screen flex flex-col justify-center items-center overflow-hidden px-4 sm:px-8 md:px-12 select-none"
-      style={{ backgroundColor: ABOUT_CONFIG.bgLight }}
+      style={{ backgroundColor: ABOUT_CONFIG.bgColor }}
     >
-      {/* Background Transition Layer (Scrubbed to #0B0B0F with scroll) */}
-      <div
-        ref={bgLayerRef}
-        id="about-bg-layer"
-        className="absolute inset-0 z-0 pointer-events-none opacity-0"
-        style={{ backgroundColor: ABOUT_CONFIG.bgDark }}
-      >
-        {/* Faint Film Grain Overlay at 4% opacity over dark background */}
+      {/* Background Ambience: Faint noise grain + soft radial electric blue glow */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <div
           className="absolute inset-0 bg-grain pointer-events-none"
           style={{ opacity: ABOUT_CONFIG.grainOpacity }}
         />
-
-        {/* Subtle Electric Blue Ambient Light behind headline */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[520px] rounded-full bg-[#1E6BFF]/[0.07] blur-3xl pointer-events-none" />
+        {/* Soft atmospheric Pepsi blue glow centered behind headline */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[520px] rounded-full bg-[#1E6BFF]/[0.06] blur-3xl pointer-events-none" />
       </div>
 
       {/* Main Content Container (Centered in 100vh) */}
@@ -306,7 +254,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
         {/* Small Label above headline */}
         <div ref={labelRef} className="mb-5 sm:mb-7 opacity-0">
           <span
-            className="font-sans font-semibold uppercase text-xs sm:text-sm tracking-[0.2em] inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm"
+            className="font-sans font-semibold uppercase text-xs sm:text-sm tracking-[0.2em] inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-black/10 bg-black/[0.03] backdrop-blur-sm"
             style={{ color: ABOUT_CONFIG.labelColor }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[#1E6BFF] animate-pulse" />
@@ -331,7 +279,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
           />
         </div>
 
-        {/* Supporting Paragraph (~40 words, max-width 560px, color #B8B8C0) */}
+        {/* Supporting Paragraph (~40 words, max-width 560px, crisp readable dark text on white) */}
         <div
           ref={paragraphRef}
           className="max-w-[560px] mx-auto px-4 opacity-0"
@@ -349,5 +297,6 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
     </section>
   );
 }
+
 
 
