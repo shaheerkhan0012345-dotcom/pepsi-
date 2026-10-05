@@ -7,13 +7,14 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 
 /**
  * AboutSection Component
- * Full-viewport dark "About" statement directly after Section 2.
+ * Full-viewport dark "About" statement with scroll-driven electric blue wave animation:
  * - Scrubbed background transition: #F2F0EB -> #0B0B0F -> #F2F0EB
- * - Giant, monumental pixel headline positioned higher up in viewport for maximum visibility
- * - Floating navbar adapts smoothly to dark mode
- * - SplitText character reveal + pixel glyph flicker effect
- * - Refined brand story paragraph
- * - Full support for prefers-reduced-motion
+ * - Giant monumental pixel headline positioned high for maximum impact
+ * - Scroll-driven hover effect: as the user scrolls, a vibrant electric Pepsi blue light wave
+ *   sweeps across the letters, illuminating each character into glowing cyan-blue with scale
+ *   before settling into brilliant pure white
+ * - Interactive cursor hover: hovering any character triggers an instant electric blue glow pop
+ * - Supporting label & brand story paragraph
  */
 export default function AboutSection({ isMobile }) {
   const sectionRef = useRef(null);
@@ -86,61 +87,40 @@ export default function AboutSection({ isMobile }) {
       }
 
       // =====================================================================
-      // 3. HEADLINE SPLITTEXT & REVEAL ANIMATION
+      // 3. HEADLINE SPLITTEXT + SCROLL-DRIVEN BLUE WAVE HOVER EFFECT
       // =====================================================================
       if (headlineRef.current) {
         const split = new SplitText(headlineRef.current, {
-          type: 'lines,chars',
-          linesClass: 'split-line overflow-hidden leading-[0.94] pb-1',
-          charsClass: 'split-char inline-block',
+          type: 'lines,words,chars',
+          linesClass: 'split-line overflow-visible leading-[0.94] pb-1',
+          wordsClass: 'split-word inline-block whitespace-nowrap',
+          charsClass: 'split-char inline-block transition-transform duration-100 cursor-pointer select-none',
         });
 
+        // 3A. Initial Reveal: characters slide up as section enters
         const enterTl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 65%',
+            start: 'top 70%',
             toggleActions: 'play none none reverse',
           },
         });
 
-        // Masked slide-up for characters
+        // Start characters in dim tone (ready for the scroll wave)
+        gsap.set(split.chars, {
+          color: 'rgba(255, 255, 255, 0.22)',
+          textShadow: '0 0 0px rgba(0,0,0,0)',
+        });
+
         enterTl.from(split.chars, {
-          yPercent: 120,
+          yPercent: 110,
           opacity: 0,
-          duration: prefersReducedMotion ? 0.35 : 0.7,
+          duration: prefersReducedMotion ? 0.35 : 0.65,
           stagger: prefersReducedMotion ? 0 : 0.012,
           ease: 'power3.out',
         });
 
-        // Pixel Flicker Effect (skipped on reduced motion)
-        if (!prefersReducedMotion) {
-          const pixelGlyphs = ['█', '░', '▒', '▓', '#', '$', '%', '*', '+', '?', '0', '1', 'X', 'Z'];
-
-          split.chars.forEach((charEl, idx) => {
-            const originalChar = charEl.textContent;
-            if (originalChar === ' ' || !originalChar.trim()) return;
-
-            const flickerDelay = 0.08 + idx * 0.012;
-            const flickerDuration = 0.35;
-            let step = 0;
-            const maxSteps = 4;
-
-            enterTl.add(() => {
-              const interval = setInterval(() => {
-                step++;
-                if (step >= maxSteps) {
-                  clearInterval(interval);
-                  charEl.textContent = originalChar;
-                } else {
-                  charEl.textContent =
-                    pixelGlyphs[Math.floor(Math.random() * pixelGlyphs.length)];
-                }
-              }, (flickerDuration * 1000) / maxSteps);
-            }, flickerDelay);
-          });
-        }
-
-        // 4. Label and paragraph fade in after the headline with upward move
+        // Label and paragraph fade in
         enterTl.fromTo(
           [labelRef.current, paragraphRef.current],
           { opacity: 0, y: 20 },
@@ -151,8 +131,87 @@ export default function AboutSection({ isMobile }) {
             stagger: 0.12,
             ease: 'power2.out',
           },
-          '-=0.35'
+          '-=0.3'
         );
+
+        // 3B. SCROLL-DRIVEN BLUE WAVE HOVER ANIMATION (Moves with Scroll!)
+        // As user scrolls through the section, an electric blue wave travels letter-by-letter
+        const validChars = split.chars.filter(
+          (c) => c.textContent && c.textContent.trim() !== ''
+        );
+
+        const scrollWaveTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 55%',
+            end: 'bottom 45%',
+            scrub: 1.0,
+          },
+        });
+
+        validChars.forEach((charEl, idx) => {
+          const stepTime = idx * 0.05;
+
+          // 1. Blue Wave Hits: Character illuminates in bright electric blue with intense glow
+          scrollWaveTl.to(
+            charEl,
+            {
+              color: '#38bdf8', // Vibrant electric blue
+              textShadow:
+                '0 0 25px rgba(56, 189, 248, 1), 0 0 50px rgba(10, 77, 163, 0.9), 0 0 80px rgba(10, 77, 163, 0.6)',
+              scale: 1.08,
+              y: -5,
+              duration: 0.35,
+              ease: 'power1.inOut',
+            },
+            stepTime
+          );
+
+          // 2. Wave Passes: Settles into crisp brilliant white with soft lingering blue aura
+          scrollWaveTl.to(
+            charEl,
+            {
+              color: '#FFFFFF',
+              textShadow:
+                '0 0 18px rgba(10, 77, 163, 0.45), 0 8px 30px rgba(0, 0, 0, 0.9)',
+              scale: 1.0,
+              y: 0,
+              duration: 0.35,
+              ease: 'power1.out',
+            },
+            stepTime + 0.3
+          );
+        });
+
+        // 3C. INTERACTIVE MOUSE HOVER EFFECT IN ELECTRIC BLUE
+        // Hovering over characters pops them with neon electric blue glow and subtle lift
+        validChars.forEach((charEl) => {
+          const handleMouseEnter = () => {
+            gsap.to(charEl, {
+              color: '#38bdf8',
+              textShadow:
+                '0 0 30px #38bdf8, 0 0 60px #0A4DA3, 0 0 100px #0A4DA3',
+              y: -8,
+              scale: 1.16,
+              duration: 0.2,
+              ease: 'power2.out',
+              overwrite: 'auto',
+            });
+          };
+
+          const handleMouseLeave = () => {
+            gsap.to(charEl, {
+              y: 0,
+              scale: 1.0,
+              duration: 0.35,
+              ease: 'power2.out',
+              overwrite: 'auto',
+            });
+          };
+
+          charEl.addEventListener('mouseenter', handleMouseEnter);
+          charEl.addEventListener('mouseleave', handleMouseLeave);
+        });
       }
     }, sectionRef);
 
@@ -176,12 +235,12 @@ export default function AboutSection({ isMobile }) {
         {/* Faint Film Grain Overlay at 4% opacity over dark background */}
         <div className="absolute inset-0 bg-grain opacity-40 pointer-events-none" />
 
-        {/* Ambient Brand Glows behind headline */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] rounded-full bg-[#0A4DA3]/[0.08] blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#E32934]/[0.05] blur-3xl pointer-events-none" />
+        {/* Dynamic Blue Glow Pulsing behind headline */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[600px] rounded-full bg-[#0A4DA3]/[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[550px] h-[550px] rounded-full bg-[#38bdf8]/[0.06] blur-3xl pointer-events-none" />
       </div>
 
-      {/* Main Content Container (Shifted up with wider max-w for huge monumental typography) */}
+      {/* Main Content Container (Shifted high up in viewport for maximum visibility) */}
       <div
         ref={contentWrapperRef}
         className="relative z-10 max-w-6xl w-full mx-auto flex flex-col items-center text-center -translate-y-2 sm:-translate-y-4 md:-translate-y-6"
@@ -200,11 +259,11 @@ export default function AboutSection({ isMobile }) {
           </span>
         </div>
 
-        {/* Monumental Pixel Headline (Very big, bright white, high contrast, positioned up) */}
+        {/* Monumental Pixel Headline with Scroll-driven Blue Hover Wave */}
         <div className="w-full mb-6 sm:mb-8">
           <h2
             ref={headlineRef}
-            className="font-pixel font-black text-white text-center uppercase tracking-tight drop-shadow-[0_12px_40px_rgba(0,0,0,0.9)]"
+            className="font-pixel font-black text-center uppercase tracking-tight"
             style={{
               fontSize: 'clamp(3.2rem, 7.8vw, 8.2rem)',
               lineHeight: 0.94,
@@ -217,7 +276,7 @@ export default function AboutSection({ isMobile }) {
           </h2>
         </div>
 
-        {/* Brand Story Paragraph (Slightly larger, crisp legibility, max-width 640px) */}
+        {/* Brand Story Paragraph */}
         <div
           ref={paragraphRef}
           className="max-w-[640px] opacity-0 mx-auto px-4"
@@ -230,11 +289,11 @@ export default function AboutSection({ isMobile }) {
           </p>
         </div>
 
-        {/* Bottom Accent Pill / Feature Bar */}
+        {/* Bottom Feature Pill */}
         <div className="mt-8 sm:mt-12 inline-flex items-center gap-4 text-xs font-mono tracking-widest text-[#9A9AA3] uppercase border-t border-white/10 pt-4">
           <span className="text-[#38bdf8] font-bold">EST. 1898</span>
           <span>•</span>
-          <span>RAW SONIC ENERGY</span>
+          <span>SCROLL TO ILLUMINATE</span>
           <span>•</span>
           <span className="text-[#E32934] font-bold">ICE-COLD CORE</span>
         </div>
