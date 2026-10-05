@@ -50,36 +50,3 @@ export const canAnimState = {
   scrollRotZ: 0,
   scrollScaleBonus: 0,
 };
-
-/**
- * Section 3: "POUR" Animation & Element State
- * Easily tweakable values for tilt, liquid speed, colors, and coordinates.
- */
-export const pourState = {
-  // Section 3 master scroll progress (0.0 to 1.0)
-  progress: 0,
-
-  // 1. Can lift & tilt (Phase 0% - 20%)
-  canLift: 0,        // 0 to 1
-  canTilt: 0,        // 0 to 1
-
-  // 2. Stream flow (Phase 20% - 30% start, 30% - 85% full, 85% - 100% stop)
-  streamProgress: 0, // 0 to 1
-  streamWidth: 0,    // 0 to 1
-
-  // 3. Liquid level & foam disc (Phase 30% - 85%)
-  liquidLevel: 0,    // 0 to 0.85
-  foamOpacity: 0,    // 0 to 1
-
-  // 4. Return upright & glass glow (Phase 85% - 100%)
-  canReturn: 0,      // 0 to 1
-  glassGlow: 0,      // 0 to 1
-
-  // Configurable spatial coordinates & angles
-  glassPos: [0, -0.85, 0],
-  canPourPos: [1.75, 1.45, 0],
-  canTiltAngle: 110 * (Math.PI / 180), // 110 degrees (~1.92 rad)
-  canReturnPos: [2.35, 0.75, 0],
-  colaColor: '#1a0c08',
-  foamColor: '#d6b88d',
-};
