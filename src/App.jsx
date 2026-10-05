@@ -5,6 +5,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import AboutSection from './components/AboutSection';
+import PourSequence from './components/PourSequence';
+import FlavorShowcase from './components/FlavorShowcase';
+import MomentsGallery from './components/MomentsGallery';
+import Footer from './components/Footer';
 import CanScene from './components/CanScene';
 import Loader from './components/Loader';
 
@@ -51,6 +55,23 @@ export default function App() {
     };
   }, []);
 
+  // 3. Global ScrollTrigger sort and refresh after fonts load and on window load
+  useEffect(() => {
+    const handleSortAndRefresh = () => {
+      ScrollTrigger.sort();
+      ScrollTrigger.refresh();
+    };
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(handleSortAndRefresh);
+    }
+    window.addEventListener('load', handleSortAndRefresh);
+
+    return () => {
+      window.removeEventListener('load', handleSortAndRefresh);
+    };
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-[#F2F0EB] text-[#0B0B0F] selection:bg-[#E32934] selection:text-white">
       {/* Background Noise / Film Grain Overlay */}
@@ -72,23 +93,19 @@ export default function App() {
         </Suspense>
       </div>
 
-      {/* Hero, Product, and About Sections */}
+      {/* Hero, Product, About, Pour, and Flavors Sections */}
       <main className="relative z-10">
         <Suspense fallback={null}>
           <Hero isLoaded={isLoaded} isMobile={isMobile} navRef={navRef} />
           <AboutSection isLoaded={isLoaded} isMobile={isMobile} />
+          <PourSequence isLoaded={isLoaded} isMobile={isMobile} />
+          <FlavorShowcase isLoaded={isLoaded} isMobile={isMobile} />
+          <MomentsGallery isLoaded={isLoaded} isMobile={isMobile} />
         </Suspense>
       </main>
 
-      {/* Minimal Footer */}
-      <footer className="relative z-30 border-t border-[#0B0B0F]/10 py-8 px-6 bg-[#E3DFD7] text-[#0B0B0F]/50 font-mono text-xs text-center flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto gap-4">
-        <span>PEPSI® IS A REGISTERED TRADEMARK OF PEPSICO, INC.</span>
-        <div className="flex items-center gap-6">
-          <a href="#" className="hover:text-[#0B0B0F]">PRIVACY</a>
-          <a href="#" className="hover:text-[#0B0B0F]">TERMS</a>
-          <a href="#" className="hover:text-[#0B0B0F]">PRESS ROOM</a>
-        </div>
-      </footer>
+      {/* Final Section 7: Interactive Footer with Cola Liquid Wordmark */}
+      <Footer isLoaded={isLoaded} isMobile={isMobile} />
     </div>
   );
 }

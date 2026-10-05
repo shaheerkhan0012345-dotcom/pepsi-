@@ -1,0 +1,210 @@
+/* Footer.css - Section 7: Final Footer with Cola Liquid Wordmark */
+
+.pepsi-footer {
+  position: relative;
+  width: 100%;
+  min-height: 125vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  background-color: #0B0B0F;
+  color: #F2F0EB;
+  user-select: none;
+  padding-top: 6rem;
+  padding-bottom: 2rem;
+  z-index: 30;
+}
+
+/* Background grain overlay */
+.footer-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Top Area: Label, Pixel Headline, and Red Pill Button */
+.footer-top-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  max-width: 800px;
+  padding: 0 1.5rem;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(24px);
+  will-change: opacity, transform;
+}
+
+.footer-label {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #9A9AA3;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(154, 154, 163, 0.2);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.footer-headline {
+  font-family: 'Pixelify Sans', 'Doto', monospace;
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: #F2F0EB;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.footer-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 2.25rem;
+  border-radius: 9999px;
+  background-color: #E32934;
+  color: #FFFFFF;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 24px -4px rgba(227, 41, 52, 0.35);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: none;
+}
+
+.footer-cta-btn:hover {
+  background-color: #c91e28;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px -4px rgba(227, 41, 52, 0.5);
+}
+
+.footer-cta-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Middle: Navigation and Social links */
+.footer-middle-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1100px;
+  padding: 3rem 1.5rem 2rem 1.5rem;
+  z-index: 10;
+}
+
+.footer-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.footer-link {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: #9A9AA3;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #F2F0EB;
+}
+
+.footer-social-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.footer-social-link {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: rgba(154, 154, 163, 0.7);
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+
+.footer-social-link:hover {
+  color: #1E6BFF;
+}
+
+/* Bottom: Giant Wordmark Area */
+.footer-wordmark-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-top: auto;
+  padding: 1rem 0;
+  z-index: 10;
+}
+
+.pepsi-wordmark-svg {
+  width: 90vw;
+  max-width: 1400px;
+  height: auto;
+  max-height: 40vh;
+  display: block;
+  overflow: visible;
+  cursor: default;
+}
+
+/* Bottom tiny credits */
+.footer-credits {
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: rgba(154, 154, 163, 0.5);
+  text-align: center;
+  padding: 1.5rem 1rem 0.5rem 1rem;
+  max-width: 900px;
+  z-index: 10;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .pepsi-footer {
+    min-height: 115vh;
+    padding-top: 4rem;
+  }
+
+  .pepsi-wordmark-svg {
+    width: 95vw;
+    max-height: 30vh;
+  }
+
+  .footer-links-row {
+    gap: 1.25rem;
+  }
+
+  .footer-headline {
+    font-size: clamp(1.8rem, 8vw, 2.8rem);
+  }
+}
+
+/* Reduced Motion Mode */
+@media (prefers-reduced-motion: reduce) {
+  .footer-top-area {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

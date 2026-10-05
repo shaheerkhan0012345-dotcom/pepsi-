@@ -1,0 +1,42 @@
+/* PourSequence.css - Minimal, calm styling for Section 4: THE POUR */
+
+.pour-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.pour-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  image-rendering: high-quality;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Masked container for text reveal */
+.pour-masked-wrapper {
+  overflow: hidden;
+  display: inline-block;
+  line-height: 1.1;
+}
+
+/* Clean text layer above canvas */
+.pour-text-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.pour-interactive {
+  pointer-events: auto;
+}

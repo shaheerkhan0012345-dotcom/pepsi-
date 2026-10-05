@@ -1,0 +1,179 @@
+/* MomentsGallery.css - Clean, calm styling for Section 6: MOMENTS */
+
+.moments-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  background-color: #F2F0EB;
+}
+
+/* Horizontal track container */
+.moments-track-wrapper {
+  position: absolute;
+  top: 52%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+}
+
+.moments-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 4vw;
+  padding-left: 6vw;
+  padding-right: 12vw;
+  will-change: transform;
+}
+
+/* Individual Moment Card */
+.moment-card {
+  flex-shrink: 0;
+  width: 40vh;
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  opacity: 0.6;
+  will-change: transform, opacity;
+}
+
+/* Image frame with rounded corners and hidden overflow for parallax */
+.moment-image-frame {
+  width: 100%;
+  height: 54vh;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  background-color: rgba(11, 11, 15, 0.05);
+  box-shadow: 0 16px 36px -8px rgba(11, 11, 15, 0.12);
+}
+
+.moment-image {
+  position: absolute;
+  top: 0;
+  left: -10%;
+  width: 120%;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+
+/* Card metadata below image in small clean sans text */
+.moment-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 4px;
+}
+
+.moment-number {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: rgba(11, 11, 15, 0.45);
+  text-transform: uppercase;
+}
+
+.moment-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #0B0B0F;
+  text-transform: uppercase;
+}
+
+/* Responsive: Mobile vertical stack, no pin */
+@media (max-width: 768px) {
+  .moments-section {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  .moments-header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    padding: 0 1.5rem 2.5rem 1.5rem !important;
+  }
+
+  .moments-track-wrapper {
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+    padding: 0 1.5rem;
+  }
+
+  .moments-track {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 3rem !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+
+  .moment-card {
+    width: 100% !important;
+    max-width: 380px !important;
+    height: auto !important;
+    opacity: 1 !important;
+    margin: 0 auto;
+  }
+
+  .moment-image-frame {
+    height: 48vh !important;
+  }
+
+  .moment-image {
+    left: 0 !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+}
+
+/* Reduced motion layout: no pin, cards in a normal scroll row */
+@media (prefers-reduced-motion: reduce) {
+  .moments-section {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 5rem 2rem 4rem 2rem;
+  }
+
+  .moments-header {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    margin-bottom: 2.5rem !important;
+  }
+
+  .moments-track-wrapper {
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+  }
+
+  .moments-track {
+    overflow-x: auto !important;
+    padding-bottom: 2rem !important;
+    transform: none !important;
+    flex-direction: row !important;
+  }
+
+  .moment-card {
+    opacity: 1 !important;
+  }
+
+  .moment-image {
+    transform: none !important;
+  }
+}
+

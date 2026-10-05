@@ -1,0 +1,131 @@
+/* FlavorShowcase.css - Clean, calm styling for Section 5: FLAVORS */
+
+.flavor-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Full-viewport Stage: 100vh by 100% of container, overflow visible, never clips cans */
+.flavor-can-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: visible !important;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Every can sits in exactly the same position with top 50%, left 50%, translate(-50%, -50%) */
+.flavor-can-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 70vh;
+  width: auto;
+  max-width: 90vw;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, 0.45));
+  will-change: transform, opacity;
+  transform-origin: center center;
+}
+
+/* Contact shadow beneath active can base */
+.flavor-ground-shadow {
+  position: absolute;
+  top: calc(50% + 34vh);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 24px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 75%);
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(5px);
+  z-index: 9;
+}
+
+/* Ambient glow behind can */
+.flavor-ambient-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  height: 520px;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(90px);
+  z-index: 5;
+  will-change: background, opacity;
+}
+
+/* Masked container for headline reveal */
+.flavor-mask {
+  overflow: hidden;
+  display: block;
+  line-height: 1.05;
+}
+
+/* Vertical progress line on left edge */
+.flavor-progress-track {
+  width: 2px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.flavor-progress-bar {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 9999px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .flavor-can-item {
+    height: 48vh;
+    top: 40%;
+  }
+
+  .flavor-ground-shadow {
+    top: calc(40% + 23vh);
+    width: 180px;
+  }
+
+  .flavor-ambient-glow {
+    top: 40%;
+    width: 320px;
+    height: 320px;
+  }
+}
+
+/* Reduced motion layout */
+@media (prefers-reduced-motion: reduce) {
+  .flavor-section {
+    height: auto !important;
+    min-height: auto !important;
+  }
+  .flavor-can-stage {
+    position: relative !important;
+    height: auto !important;
+  }
+  .flavor-can-item {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    height: 45vh !important;
+  }
+}
