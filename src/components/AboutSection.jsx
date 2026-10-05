@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
@@ -6,16 +6,32 @@ import { SplitText } from 'gsap/SplitText';
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
 /**
- * AboutSection Component
- * Full-viewport dark "About" statement with scroll-driven electric blue wave animation:
- * - Scrubbed background transition: #F2F0EB -> #0B0B0F -> #F2F0EB
- * - Giant monumental pixel headline positioned high for maximum impact
- * - Scroll-driven hover effect: as the user scrolls, a vibrant electric Pepsi blue light wave
- *   sweeps across the letters, illuminating each character into glowing cyan-blue with scale
- *   before settling into brilliant pure white
- * - Interactive cursor hover: hovering any character triggers an instant electric blue glow pop
- * - Supporting label & brand story paragraph
+ * Tunable Configuration for AboutSection Pinned Text Fill Animation
  */
+export const ABOUT_CONFIG = {
+  // Pinning settings
+  pinLength: '+=200%',                  // Scroll distance to stay pinned (200% of viewport height)
+  scrubAmount: 0.6,                     // Smooth scrub catch-up time in seconds
+
+  // Text Fill Animation
+  initialColor: '#3a3a44',              // Dim gray starting color for unilluminated letters
+  fillColor: '#1E6BFF',                 // Vibrant electric blue color when illuminated
+  glowColor: '0 0 24px rgba(30, 107, 255, 0.55)', // Electric blue glow/shadow
+  charDuration: 0.04,                   // Duration of color transition per character
+  charStagger: 0.027,                   // Stagger time between consecutive characters
+
+  // Supporting Elements
+  labelColor: '#9A9AA3',                // 'ABOUT PEPSI' label color
+  paragraphColor: '#B8B8C0',            // 40-word brand narrative paragraph color
+  paragraphFadeThreshold: 0.70,         // Scroll progress (70%) where paragraph begins fading in
+  paragraphFadeDuration: 0.25,          // Fade-in duration of the paragraph
+
+  // Background and Theming
+  bgDark: '#0B0B0F',                    // Near-black section background
+  bgLight: '#F2F0EB',                   // Off-white transition background
+  grainOpacity: 0.04,                   // 4% film grain opacity
+};
+
 export default function AboutSection({ isMobile }) {
   const sectionRef = useRef(null);
   const bgLayerRef = useRef(null);
@@ -24,14 +40,15 @@ export default function AboutSection({ isMobile }) {
   const headlineRef = useRef(null);
   const paragraphRef = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let splitInstance = null;
 
-    const ctx = gsap.context(() => {
+    const ctx = gsap.context((self) => {
       // =====================================================================
-      // 1. BACKGROUND TRANSITION & NAVBAR COLOR ADAPTATION
+      // 1. BACKGROUND SCRUB TRANSITIONS & NAVBAR THEME
       // =====================================================================
-      // As the section enters: scrub from #F2F0EB to near-black #0B0B0F
+      // Entry: scrub from off-white (#F2F0EB) to near-black (#0B0B0F)
       gsap.fromTo(
         bgLayerRef.current,
         { opacity: 0 },
@@ -40,30 +57,30 @@ export default function AboutSection({ isMobile }) {
           ease: 'none',
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 85%',
-            end: 'top 20%',
+            start: 'top bottom',
+            end: 'top top',
             scrub: true,
           },
         }
       );
 
-      // As the section leaves: scrub back from #0B0B0F to off-white #F2F0EB
+      // Exit: scrub back from near-black (#0B0B0F) to off-white (#F2F0EB)
       gsap.to(bgLayerRef.current, {
         opacity: 0,
         ease: 'none',
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: 'bottom 80%',
-          end: 'bottom 15%',
+          start: 'bottom bottom',
+          end: 'bottom top',
           scrub: true,
         },
       });
 
-      // Navbar theme toggle: add 'nav-dark' class when inside the dark section
+      // Navbar theme toggle: switch to dark mode while inside this section
       ScrollTrigger.create({
         trigger: sectionRef.current,
-        start: 'top 30%',
-        end: 'bottom 30%',
+        start: 'top 35%',
+        end: 'bottom 20%',
         onEnter: () => document.getElementById('main-navbar')?.classList.add('nav-dark'),
         onLeave: () => document.getElementById('main-navbar')?.classList.remove('nav-dark'),
         onEnterBack: () => document.getElementById('main-navbar')?.classList.add('nav-dark'),
@@ -71,233 +88,218 @@ export default function AboutSection({ isMobile }) {
       });
 
       // =====================================================================
-      // 2. PARALLAX EFFECT
+      // 2. PREFERS-REDUCED-MOTION HANDLING
       // =====================================================================
-      if (!prefersReducedMotion && contentWrapperRef.current) {
-        gsap.to(contentWrapperRef.current, {
-          y: isMobile ? 25 : 55,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: true,
-          },
-        });
+      if (prefersReducedMotion) {
+        // Show headline fully blue with no pin or scroll animations
+        if (headlineRef.current) {
+          gsap.set(headlineRef.current, {
+            color: ABOUT_CONFIG.fillColor,
+            textShadow: ABOUT_CONFIG.glowColor,
+          });
+        }
+        if (labelRef.current) gsap.set(labelRef.current, { opacity: 1, y: 0 });
+        if (paragraphRef.current) gsap.set(paragraphRef.current, { opacity: 1, y: 0 });
+        if (bgLayerRef.current) gsap.set(bgLayerRef.current, { opacity: 1 });
+        return;
       }
 
       // =====================================================================
-      // 3. HEADLINE SPLITTEXT + SCROLL-DRIVEN BLUE WAVE HOVER EFFECT
+      // 3. SUPPORTING LABEL ENTRANCE ANIMATION
       // =====================================================================
-      if (headlineRef.current) {
-        const split = new SplitText(headlineRef.current, {
-          type: 'lines,words,chars',
-          linesClass: 'split-line overflow-visible leading-[0.94] pb-1',
-          wordsClass: 'split-word inline-block whitespace-nowrap',
-          charsClass: 'split-char inline-block transition-transform duration-100 cursor-pointer select-none',
-        });
-
-        // 3A. Initial Reveal: characters slide up as section enters
-        const enterTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 70%',
-            toggleActions: 'play none none reverse',
-          },
-        });
-
-        // Start characters in dim tone (ready for the scroll wave)
-        gsap.set(split.chars, {
-          color: 'rgba(255, 255, 255, 0.22)',
-          textShadow: '0 0 0px rgba(0,0,0,0)',
-        });
-
-        enterTl.from(split.chars, {
-          yPercent: 110,
-          opacity: 0,
-          duration: prefersReducedMotion ? 0.35 : 0.65,
-          stagger: prefersReducedMotion ? 0 : 0.012,
-          ease: 'power3.out',
-        });
-
-        // Label and paragraph fade in
-        enterTl.fromTo(
-          [labelRef.current, paragraphRef.current],
-          { opacity: 0, y: 20 },
+      if (labelRef.current) {
+        gsap.fromTo(
+          labelRef.current,
+          { opacity: 0, y: 16 },
           {
             opacity: 1,
             y: 0,
-            duration: 0.75,
-            stagger: 0.12,
+            duration: 0.65,
             ease: 'power2.out',
-          },
-          '-=0.3'
-        );
-
-        // 3B. SCROLL-DRIVEN BLUE WAVE HOVER ANIMATION (Moves with Scroll!)
-        // As user scrolls through the section, an electric blue wave travels letter-by-letter
-        const validChars = split.chars.filter(
-          (c) => c.textContent && c.textContent.trim() !== ''
-        );
-
-        const scrollWaveTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 55%',
-            end: 'bottom 45%',
-            scrub: 1.0,
-          },
-        });
-
-        validChars.forEach((charEl, idx) => {
-          const stepTime = idx * 0.05;
-
-          // 1. Blue Wave Hits: Character illuminates in bright electric blue with intense glow
-          scrollWaveTl.to(
-            charEl,
-            {
-              color: '#38bdf8', // Vibrant electric blue
-              textShadow:
-                '0 0 25px rgba(56, 189, 248, 1), 0 0 50px rgba(10, 77, 163, 0.9), 0 0 80px rgba(10, 77, 163, 0.6)',
-              scale: 1.08,
-              y: -5,
-              duration: 0.35,
-              ease: 'power1.inOut',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top 75%',
+              toggleActions: 'play none none reverse',
             },
-            stepTime
-          );
-
-          // 2. Wave Passes: Settles into crisp brilliant white with soft lingering blue aura
-          scrollWaveTl.to(
-            charEl,
-            {
-              color: '#FFFFFF',
-              textShadow:
-                '0 0 18px rgba(10, 77, 163, 0.45), 0 8px 30px rgba(0, 0, 0, 0.9)',
-              scale: 1.0,
-              y: 0,
-              duration: 0.35,
-              ease: 'power1.out',
-            },
-            stepTime + 0.3
-          );
-        });
-
-        // 3C. INTERACTIVE MOUSE HOVER EFFECT IN ELECTRIC BLUE
-        // Hovering over characters pops them with neon electric blue glow and subtle lift
-        validChars.forEach((charEl) => {
-          const handleMouseEnter = () => {
-            gsap.to(charEl, {
-              color: '#38bdf8',
-              textShadow:
-                '0 0 30px #38bdf8, 0 0 60px #0A4DA3, 0 0 100px #0A4DA3',
-              y: -8,
-              scale: 1.16,
-              duration: 0.2,
-              ease: 'power2.out',
-              overwrite: 'auto',
-            });
-          };
-
-          const handleMouseLeave = () => {
-            gsap.to(charEl, {
-              y: 0,
-              scale: 1.0,
-              duration: 0.35,
-              ease: 'power2.out',
-              overwrite: 'auto',
-            });
-          };
-
-          charEl.addEventListener('mouseenter', handleMouseEnter);
-          charEl.addEventListener('mouseleave', handleMouseLeave);
-        });
+          }
+        );
       }
+
+      // =====================================================================
+      // 4. FONT-READY SPLITTEXT & PINNED BLUE FILL ANIMATION
+      // =====================================================================
+      document.fonts.ready.then(() => {
+        // Guard against race conditions if unmounted while fonts were loading
+        if (self.isReverted || !headlineRef.current || !sectionRef.current) return;
+
+        self.add(() => {
+          // Split each line into words and characters to strictly preserve 3 desktop lines
+          const lineElements = headlineRef.current.querySelectorAll('.headline-line');
+          splitInstance = new SplitText(lineElements, {
+            type: 'words,chars',
+            charsClass: 'split-char inline-block select-none',
+            wordsClass: 'split-word inline-block whitespace-nowrap',
+          });
+
+          const validChars = splitInstance.chars.filter(
+            (c) => c && c.textContent && c.textContent.trim() !== ''
+          );
+
+          // All letters start in dim gray (#3a3a44)
+          gsap.set(validChars, {
+            color: ABOUT_CONFIG.initialColor,
+            textShadow: 'none',
+          });
+
+          // Master Pinned Timeline: pins for +=200% of viewport height
+          const pinTl = gsap.timeline({
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top top',
+              end: ABOUT_CONFIG.pinLength,
+              pin: true,
+              pinSpacing: true,
+              scrub: ABOUT_CONFIG.scrubAmount,
+              invalidateOnRefresh: true,
+            },
+          });
+
+          // Calculate stagger dynamically so by the time the pin ends (at 1.0), every letter is blue
+          const totalDuration = 1.0;
+          const charDuration = ABOUT_CONFIG.charDuration;
+          const calculatedStagger =
+            (totalDuration - charDuration) / Math.max(1, validChars.length - 1);
+
+          // Sequential character fill from first to last (fully reversible)
+          pinTl.to(
+            validChars,
+            {
+              color: ABOUT_CONFIG.fillColor,
+              textShadow: ABOUT_CONFIG.glowColor,
+              duration: charDuration,
+              stagger: calculatedStagger,
+              ease: 'none',
+            },
+            0
+          );
+
+          // Supporting paragraph fades in around 70% of the pinned scroll
+          if (paragraphRef.current) {
+            pinTl.fromTo(
+              paragraphRef.current,
+              {
+                opacity: 0,
+                y: 18,
+              },
+              {
+                opacity: 1,
+                y: 0,
+                duration: ABOUT_CONFIG.paragraphFadeDuration,
+                ease: 'power2.out',
+              },
+              ABOUT_CONFIG.paragraphFadeThreshold
+            );
+          }
+
+          // Recalculate ScrollTrigger measurements with exact rendered typography
+          ScrollTrigger.refresh();
+
+          // SplitText cleanup hook
+          return () => {
+            if (splitInstance) {
+              splitInstance.revert();
+              splitInstance = null;
+            }
+          };
+        });
+      });
     }, sectionRef);
 
-    return () => ctx.revert();
+    return () => {
+      if (splitInstance) {
+        splitInstance.revert();
+        splitInstance = null;
+      }
+      ctx.revert();
+    };
   }, [isMobile]);
 
   return (
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full min-h-screen flex flex-col justify-start items-center overflow-hidden pt-28 sm:pt-32 md:pt-36 pb-20 px-4 sm:px-8 md:px-12 select-none"
-      style={{ backgroundColor: '#F2F0EB' }}
+      className="relative w-full h-screen min-h-screen flex flex-col justify-center items-center overflow-hidden px-4 sm:px-8 md:px-12 select-none"
+      style={{ backgroundColor: ABOUT_CONFIG.bgLight }}
     >
       {/* Background Transition Layer (Scrubbed to #0B0B0F with scroll) */}
       <div
         ref={bgLayerRef}
         id="about-bg-layer"
         className="absolute inset-0 z-0 pointer-events-none opacity-0"
-        style={{ backgroundColor: '#0B0B0F' }}
+        style={{ backgroundColor: ABOUT_CONFIG.bgDark }}
       >
         {/* Faint Film Grain Overlay at 4% opacity over dark background */}
-        <div className="absolute inset-0 bg-grain opacity-40 pointer-events-none" />
+        <div
+          className="absolute inset-0 bg-grain pointer-events-none"
+          style={{ opacity: ABOUT_CONFIG.grainOpacity }}
+        />
 
-        {/* Dynamic Blue Glow Pulsing behind headline */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[600px] rounded-full bg-[#0A4DA3]/[0.12] blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[550px] h-[550px] rounded-full bg-[#38bdf8]/[0.06] blur-3xl pointer-events-none" />
+        {/* Subtle Electric Blue Ambient Light behind headline */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[520px] rounded-full bg-[#1E6BFF]/[0.07] blur-3xl pointer-events-none" />
       </div>
 
-      {/* Main Content Container (Shifted high up in viewport for maximum visibility) */}
+      {/* Main Content Container (Centered in 100vh) */}
       <div
         ref={contentWrapperRef}
-        className="relative z-10 max-w-6xl w-full mx-auto flex flex-col items-center text-center -translate-y-2 sm:-translate-y-4 md:-translate-y-6"
+        className="relative z-10 max-w-5xl w-full mx-auto flex flex-col items-center text-center"
       >
-        {/* Top Label */}
-        <div
-          ref={labelRef}
-          className="mb-4 sm:mb-6 opacity-0"
-        >
+        {/* Small Label above headline */}
+        <div ref={labelRef} className="mb-5 sm:mb-7 opacity-0">
           <span
-            className="font-sans font-semibold uppercase text-xs sm:text-sm tracking-[0.22em] text-[#9A9AA3] inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm"
+            className="font-sans font-semibold uppercase text-xs sm:text-sm tracking-[0.2em] inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm"
+            style={{ color: ABOUT_CONFIG.labelColor }}
           >
-            <span className="w-2 h-2 rounded-full bg-[#0A4DA3] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1E6BFF] animate-pulse" />
             ABOUT PEPSI
-            <span className="w-2 h-2 rounded-full bg-[#E32934]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#E32934]" />
           </span>
         </div>
 
-        {/* Monumental Pixel Headline with Scroll-driven Blue Hover Wave */}
+        {/* Monumental Pixel Headline (3 lines on desktop) */}
         <div className="w-full mb-6 sm:mb-8">
           <h2
             ref={headlineRef}
-            className="font-pixel font-black text-center uppercase tracking-tight"
+            className="font-pixel font-black text-center uppercase tracking-tight select-none"
             style={{
-              fontSize: 'clamp(3.2rem, 7.8vw, 8.2rem)',
-              lineHeight: 0.94,
+              fontSize: isMobile
+                ? 'clamp(1.75rem, 6.4vw, 2.5rem)'
+                : 'clamp(2.5rem, 5.2vw, 5.2rem)',
+              lineHeight: 1.02,
               wordBreak: 'break-word',
             }}
           >
-            WELCOME TO PEPSI <br className="hidden sm:inline" />
-            WHERE COLD <br className="hidden sm:inline" />
-            MEETS ELECTRIC
+            <span className="headline-line block">WELCOME TO PEPSI</span>
+            <span className="headline-line block">WHERE COLD</span>
+            <span className="headline-line block">MEETS ELECTRIC</span>
           </h2>
         </div>
 
-        {/* Brand Story Paragraph */}
+        {/* Supporting Paragraph (~40 words, max-width 560px, color #B8B8C0) */}
         <div
           ref={paragraphRef}
-          className="max-w-[640px] opacity-0 mx-auto px-4"
+          className="max-w-[560px] mx-auto px-4 opacity-0"
         >
-          <p className="font-sans text-base sm:text-lg md:text-xl text-[#C8C8D2] leading-relaxed font-normal">
-            Born in 1898 from a bold North Carolina apothecary, Pepsi revolutionized
-            modern refreshment. Today, we push boundaries at the intersection of raw
-            sonic energy, street culture, and ice-cold fizz—engineered for those who
-            refuse to stay still and thirst for what's next.
+          <p
+            className="font-sans text-sm sm:text-base md:text-lg leading-relaxed font-normal text-center"
+            style={{ color: ABOUT_CONFIG.paragraphColor }}
+          >
+            Born in 1898 from a bold apothecary, Pepsi revolutionized modern refreshment.
+            Today, we stand at the vibrant intersection of raw sonic energy, street culture,
+            and ice-cold fizz—engineered for those who refuse to stay still and thirst for what's next.
           </p>
-        </div>
-
-        {/* Bottom Feature Pill */}
-        <div className="mt-8 sm:mt-12 inline-flex items-center gap-4 text-xs font-mono tracking-widest text-[#9A9AA3] uppercase border-t border-white/10 pt-4">
-          <span className="text-[#38bdf8] font-bold">EST. 1898</span>
-          <span>•</span>
-          <span>SCROLL TO ILLUMINATE</span>
-          <span>•</span>
-          <span className="text-[#E32934] font-bold">ICE-COLD CORE</span>
         </div>
       </div>
     </section>
   );
 }
+
