@@ -19,9 +19,10 @@ export const ABOUT_CONFIG = {
   scrubAmount: 0.6,                     // Smooth scrub catch-up time in seconds
 
   // Text Fill Animation Timing (Normalized 0.0 -> 1.0 pinned duration)
-  fillStart: 0.05,                      // Holds unilluminated at 0-5% so user sees section has stopped
-  fillEnd: 0.68,                        // Text fill fully completes by 68% of the pinned scroll
-  holdEnd: 1.00,                        // Stays pinned from 68% to 100% so completed state is clearly admired
+  fillStart: 0.06,                      // Holds unilluminated at 0-6% so user sees section has stopped
+  fillEnd: 0.65,                        // Text fill fully completes by 65% of the pinned scroll
+  holdEnd: 0.85,                        // Holds completed electric blue state from 65% to 85%
+  exitEnd: 1.00,                        // Content & dark background smoothly fade out from 85% to 100%
 
   // Colors & Aesthetics
   initialColor: '#3a3a44',              // Dim gray starting color for unilluminated letters
@@ -31,8 +32,8 @@ export const ABOUT_CONFIG = {
   // Supporting Elements
   labelColor: '#9A9AA3',                // 'ABOUT PEPSI' label color
   paragraphColor: '#B8B8C0',            // 40-word brand narrative paragraph color
-  paragraphFadeStart: 0.45,             // Paragraph starts fading in at 45% of scroll
-  paragraphFadeEnd: 0.68,               // Paragraph fully visible by 68% alongside headline
+  paragraphFadeStart: 0.40,             // Paragraph starts fading in at 40% of scroll
+  paragraphFadeEnd: 0.65,               // Paragraph fully visible by 65% alongside headline
 
   // Background and Theming
   bgDark: '#0B0B0F',                    // Near-black section background
@@ -63,7 +64,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
 
     const ctx = gsap.context((self) => {
       // =====================================================================
-      // 1. BACKGROUND SCRUB TRANSITIONS & NAVBAR THEME
+      // 1. BACKGROUND ENTRY SCRUB & NAVBAR THEME
       // =====================================================================
       // Entry: scrub from off-white (#F2F0EB) to near-black (#0B0B0F)
       gsap.fromTo(
@@ -81,23 +82,11 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
         }
       );
 
-      // Exit: scrub back from near-black (#0B0B0F) to off-white (#F2F0EB)
-      gsap.to(bgLayerRef.current, {
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'bottom bottom',
-          end: 'bottom top',
-          scrub: true,
-        },
-      });
-
       // Navbar theme toggle: switch to dark mode while inside this section
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start: 'top 35%',
-        end: 'bottom 20%',
+        end: () => `+=${window.innerHeight * 2.85}`,
         onEnter: () => document.getElementById('main-navbar')?.classList.add('nav-dark'),
         onLeave: () => document.getElementById('main-navbar')?.classList.remove('nav-dark'),
         onEnterBack: () => document.getElementById('main-navbar')?.classList.add('nav-dark'),
@@ -183,7 +172,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
             },
           });
 
-          // Text animation runs during 0.05 -> 0.68 while the section is STOPPED (pinned)
+          // PHASE A (0.06 -> 0.65): Text animation runs while section is STOPPED (pinned)
           const fillDuration = ABOUT_CONFIG.fillEnd - ABOUT_CONFIG.fillStart;
           const charDuration = 0.035;
           const charStagger = (fillDuration - charDuration) / Math.max(1, validChars.length - 1);
@@ -201,7 +190,7 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
             ABOUT_CONFIG.fillStart
           );
 
-          // Supporting paragraph fades in smoothly alongside headline
+          // Supporting paragraph fades in smoothly alongside headline (0.40 -> 0.65)
           if (paragraphRef.current) {
             pinTl.fromTo(
               paragraphRef.current,
@@ -219,10 +208,39 @@ export default function AboutSection({ isLoaded = true, isMobile }) {
             );
           }
 
-          // Generous hold buffer (0.68 -> 1.00):
+          // PHASE B (0.65 -> 0.85): Generous hold buffer:
           // The section STAYS STOPPED (pinned) so the user can clearly see and admire
-          // the completed electric blue statement before it releases ("it should be seen properly completed")
+          // the completed electric blue statement ("it should be seen properly completed")
           pinTl.to({}, { duration: 0.01 }, ABOUT_CONFIG.holdEnd);
+
+          // PHASE C (0.85 -> 1.00): Clean Exit Dissolve:
+          // As the pin completes, contentWrapper and bgLayer smoothly fade out to 0.
+          // This guarantees that when the section unpins, NO TEXT remains visible or
+          // reappears after the section ends!
+          if (contentWrapperRef.current) {
+            pinTl.to(
+              contentWrapperRef.current,
+              {
+                opacity: 0,
+                y: -24,
+                duration: ABOUT_CONFIG.exitEnd - ABOUT_CONFIG.holdEnd,
+                ease: 'power2.inOut',
+              },
+              ABOUT_CONFIG.holdEnd
+            );
+          }
+
+          if (bgLayerRef.current) {
+            pinTl.to(
+              bgLayerRef.current,
+              {
+                opacity: 0,
+                duration: ABOUT_CONFIG.exitEnd - ABOUT_CONFIG.holdEnd,
+                ease: 'power2.inOut',
+              },
+              ABOUT_CONFIG.holdEnd
+            );
+          }
 
           // Recalculate ScrollTrigger measurements with exact rendered typography
           ScrollTrigger.refresh();
