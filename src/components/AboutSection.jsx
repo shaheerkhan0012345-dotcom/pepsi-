@@ -6,6 +6,11 @@ import { SplitText } from 'gsap/SplitText';
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
 /**
+ * Clean Raw Headline HTML (ensures exactly 1 copy of 3 lines on desktop)
+ */
+const RAW_HEADLINE_HTML = 'WELCOME TO PEPSI<br />WHERE COLD<br />MEETS ELECTRIC';
+
+/**
  * Tunable Configuration for AboutSection Pinned Text Fill Animation
  */
 export const ABOUT_CONFIG = {
@@ -13,18 +18,21 @@ export const ABOUT_CONFIG = {
   pinLength: '+=200%',                  // Scroll distance to stay pinned (200% of viewport height)
   scrubAmount: 0.6,                     // Smooth scrub catch-up time in seconds
 
-  // Text Fill Animation
+  // Text Fill Animation Timing (Normalized 0.0 -> 1.0 pinned duration)
+  fillStart: 0.05,                      // Holds unilluminated at 0-5% so user sees section has stopped
+  fillEnd: 0.68,                        // Text fill fully completes by 68% of the pinned scroll
+  holdEnd: 1.00,                        // Stays pinned from 68% to 100% so completed state is clearly admired
+
+  // Colors & Aesthetics
   initialColor: '#3a3a44',              // Dim gray starting color for unilluminated letters
   fillColor: '#1E6BFF',                 // Vibrant electric blue color when illuminated
   glowColor: '0 0 24px rgba(30, 107, 255, 0.55)', // Electric blue glow/shadow
-  charDuration: 0.04,                   // Duration of color transition per character
-  charStagger: 0.027,                   // Stagger time between consecutive characters
 
   // Supporting Elements
   labelColor: '#9A9AA3',                // 'ABOUT PEPSI' label color
   paragraphColor: '#B8B8C0',            // 40-word brand narrative paragraph color
-  paragraphFadeThreshold: 0.70,         // Scroll progress (70%) where paragraph begins fading in
-  paragraphFadeDuration: 0.25,          // Fade-in duration of the paragraph
+  paragraphFadeStart: 0.45,             // Paragraph starts fading in at 45% of scroll
+  paragraphFadeEnd: 0.68,               // Paragraph fully visible by 68% alongside headline
 
   // Background and Theming
   bgDark: '#0B0B0F',                    // Near-black section background
@@ -32,7 +40,7 @@ export const ABOUT_CONFIG = {
   grainOpacity: 0.04,                   // 4% film grain opacity
 };
 
-export default function AboutSection({ isMobile }) {
+export default function AboutSection({ isLoaded = true, isMobile }) {
   const sectionRef = useRef(null);
   const bgLayerRef = useRef(null);
   const contentWrapperRef = useRef(null);
@@ -41,8 +49,17 @@ export default function AboutSection({ isMobile }) {
   const paragraphRef = useRef(null);
 
   useLayoutEffect(() => {
+    // Wait until loader finishes so Hero pin measurements are in place
+    if (isLoaded === false) return;
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let splitInstance = null;
+    let isCancelled = false;
+
+    // Ensure DOM is in pristine, single-copy state before GSAP runs
+    if (headlineRef.current) {
+      headlineRef.current.innerHTML = RAW_HEADLINE_HTML;
+    }
 
     const ctx = gsap.context((self) => {
       // =====================================================================
@@ -91,7 +108,6 @@ export default function AboutSection({ isMobile }) {
       // 2. PREFERS-REDUCED-MOTION HANDLING
       // =====================================================================
       if (prefersReducedMotion) {
-        // Show headline fully blue with no pin or scroll animations
         if (headlineRef.current) {
           gsap.set(headlineRef.current, {
             color: ABOUT_CONFIG.fillColor,
@@ -129,16 +145,18 @@ export default function AboutSection({ isMobile }) {
       // 4. FONT-READY SPLITTEXT & PINNED BLUE FILL ANIMATION
       // =====================================================================
       document.fonts.ready.then(() => {
-        // Guard against race conditions if unmounted while fonts were loading
-        if (self.isReverted || !headlineRef.current || !sectionRef.current) return;
+        if (isCancelled || self.isReverted || !headlineRef.current || !sectionRef.current) return;
 
         self.add(() => {
-          // Split each line into words and characters to strictly preserve 3 desktop lines
-          const lineElements = headlineRef.current.querySelectorAll('.headline-line');
-          splitInstance = new SplitText(lineElements, {
+          // Re-verify pristine innerHTML so exactly 1 instance exists (no duplicate text)
+          headlineRef.current.innerHTML = RAW_HEADLINE_HTML;
+
+          // Split directly on headlineRef.current with deepSlice: false to prevent duplicate cloning
+          splitInstance = new SplitText(headlineRef.current, {
             type: 'words,chars',
             charsClass: 'split-char inline-block select-none',
             wordsClass: 'split-word inline-block whitespace-nowrap',
+            deepSlice: false,
           });
 
           const validChars = splitInstance.chars.filter(
@@ -151,7 +169,7 @@ export default function AboutSection({ isMobile }) {
             textShadow: 'none',
           });
 
-          // Master Pinned Timeline: pins for +=200% of viewport height
+          // Master Pinned Timeline: pins when reaching top of viewport
           const pinTl = gsap.timeline({
             scrollTrigger: {
               trigger: sectionRef.current,
@@ -160,15 +178,15 @@ export default function AboutSection({ isMobile }) {
               pin: true,
               pinSpacing: true,
               scrub: ABOUT_CONFIG.scrubAmount,
+              anticipatePin: 1,
               invalidateOnRefresh: true,
             },
           });
 
-          // Calculate stagger dynamically so by the time the pin ends (at 1.0), every letter is blue
-          const totalDuration = 1.0;
-          const charDuration = ABOUT_CONFIG.charDuration;
-          const calculatedStagger =
-            (totalDuration - charDuration) / Math.max(1, validChars.length - 1);
+          // Text animation runs during 0.05 -> 0.68 while the section is STOPPED (pinned)
+          const fillDuration = ABOUT_CONFIG.fillEnd - ABOUT_CONFIG.fillStart;
+          const charDuration = 0.035;
+          const charStagger = (fillDuration - charDuration) / Math.max(1, validChars.length - 1);
 
           // Sequential character fill from first to last (fully reversible)
           pinTl.to(
@@ -177,13 +195,13 @@ export default function AboutSection({ isMobile }) {
               color: ABOUT_CONFIG.fillColor,
               textShadow: ABOUT_CONFIG.glowColor,
               duration: charDuration,
-              stagger: calculatedStagger,
+              stagger: charStagger,
               ease: 'none',
             },
-            0
+            ABOUT_CONFIG.fillStart
           );
 
-          // Supporting paragraph fades in around 70% of the pinned scroll
+          // Supporting paragraph fades in smoothly alongside headline
           if (paragraphRef.current) {
             pinTl.fromTo(
               paragraphRef.current,
@@ -194,17 +212,21 @@ export default function AboutSection({ isMobile }) {
               {
                 opacity: 1,
                 y: 0,
-                duration: ABOUT_CONFIG.paragraphFadeDuration,
+                duration: ABOUT_CONFIG.paragraphFadeEnd - ABOUT_CONFIG.paragraphFadeStart,
                 ease: 'power2.out',
               },
-              ABOUT_CONFIG.paragraphFadeThreshold
+              ABOUT_CONFIG.paragraphFadeStart
             );
           }
+
+          // Generous hold buffer (0.68 -> 1.00):
+          // The section STAYS STOPPED (pinned) so the user can clearly see and admire
+          // the completed electric blue statement before it releases ("it should be seen properly completed")
+          pinTl.to({}, { duration: 0.01 }, ABOUT_CONFIG.holdEnd);
 
           // Recalculate ScrollTrigger measurements with exact rendered typography
           ScrollTrigger.refresh();
 
-          // SplitText cleanup hook
           return () => {
             if (splitInstance) {
               splitInstance.revert();
@@ -215,14 +237,24 @@ export default function AboutSection({ isMobile }) {
       });
     }, sectionRef);
 
+    // Refresh ScrollTrigger after Hero pin spacing settles
+    const refreshTimer1 = setTimeout(() => ScrollTrigger.refresh(), 150);
+    const refreshTimer2 = setTimeout(() => ScrollTrigger.refresh(), 600);
+
     return () => {
+      isCancelled = true;
+      clearTimeout(refreshTimer1);
+      clearTimeout(refreshTimer2);
       if (splitInstance) {
         splitInstance.revert();
         splitInstance = null;
       }
+      if (headlineRef.current) {
+        headlineRef.current.innerHTML = RAW_HEADLINE_HTML;
+      }
       ctx.revert();
     };
-  }, [isMobile]);
+  }, [isLoaded, isMobile]);
 
   return (
     <section
@@ -265,23 +297,20 @@ export default function AboutSection({ isMobile }) {
           </span>
         </div>
 
-        {/* Monumental Pixel Headline (3 lines on desktop) */}
+        {/* Monumental Pixel Headline (Single clean element, strictly 3 lines on desktop) */}
         <div className="w-full mb-6 sm:mb-8">
           <h2
             ref={headlineRef}
-            className="font-pixel font-black text-center uppercase tracking-tight select-none"
+            className="font-pixel font-black text-center uppercase tracking-tight select-none w-full max-w-5xl mx-auto"
             style={{
               fontSize: isMobile
                 ? 'clamp(1.75rem, 6.4vw, 2.5rem)'
                 : 'clamp(2.5rem, 5.2vw, 5.2rem)',
-              lineHeight: 1.02,
+              lineHeight: 1.04,
               wordBreak: 'break-word',
             }}
-          >
-            <span className="headline-line block">WELCOME TO PEPSI</span>
-            <span className="headline-line block">WHERE COLD</span>
-            <span className="headline-line block">MEETS ELECTRIC</span>
-          </h2>
+            dangerouslySetInnerHTML={{ __html: RAW_HEADLINE_HTML }}
+          />
         </div>
 
         {/* Supporting Paragraph (~40 words, max-width 560px, color #B8B8C0) */}
@@ -302,4 +331,5 @@ export default function AboutSection({ isMobile }) {
     </section>
   );
 }
+
 

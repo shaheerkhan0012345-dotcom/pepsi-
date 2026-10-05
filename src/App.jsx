@@ -76,7 +76,7 @@ export default function App() {
       <main className="relative z-10">
         <Suspense fallback={null}>
           <Hero isLoaded={isLoaded} isMobile={isMobile} navRef={navRef} />
-          <AboutSection isMobile={isMobile} />
+          <AboutSection isLoaded={isLoaded} isMobile={isMobile} />
         </Suspense>
       </main>
 
