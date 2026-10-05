@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import AboutSection from './components/AboutSection';
 import CanScene from './components/CanScene';
 import Loader from './components/Loader';
 
@@ -71,10 +72,11 @@ export default function App() {
         </Suspense>
       </div>
 
-      {/* Hero and Product Sections */}
+      {/* Hero, Product, and About Sections */}
       <main className="relative z-10">
         <Suspense fallback={null}>
           <Hero isLoaded={isLoaded} isMobile={isMobile} navRef={navRef} />
+          <AboutSection isMobile={isMobile} />
         </Suspense>
       </main>
 

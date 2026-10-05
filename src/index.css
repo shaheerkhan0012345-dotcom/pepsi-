@@ -58,3 +58,36 @@ html.lenis, html.lenis body {
 ::-webkit-scrollbar-thumb:hover {
   background: #E32934;
 }
+
+/* Smooth Navbar Dark Mode Adaptation */
+#main-navbar {
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#main-navbar.nav-dark {
+  background-color: rgba(11, 11, 15, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+#main-navbar.nav-dark a,
+#main-navbar.nav-dark span,
+#main-navbar.nav-dark nav a {
+  color: #F2F0EB;
+}
+
+#main-navbar.nav-dark span.text-\[\#0B0B0F\]\/50,
+#main-navbar.nav-dark nav a {
+  color: rgba(242, 240, 235, 0.65);
+}
+
+#main-navbar.nav-dark nav a:hover,
+#main-navbar.nav-dark span.font-pixel:hover {
+  color: #38bdf8;
+}
+
+#main-navbar.nav-dark div.border-\[\#0B0B0F\]\/10 {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(242, 240, 235, 0.7);
+}
