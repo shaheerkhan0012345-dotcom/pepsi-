@@ -9,11 +9,10 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
  * AboutSection Component
  * Full-viewport dark "About" statement directly after Section 2.
  * - Scrubbed background transition: #F2F0EB -> #0B0B0F -> #F2F0EB
+ * - Giant, monumental pixel headline positioned higher up in viewport for maximum visibility
  * - Floating navbar adapts smoothly to dark mode
- * - "ABOUT PEPSI" label in Space Grotesk
- * - "WELCOME TO PEPSI WHERE COLD MEETS ELECTRIC" pixel headline with SplitText masked reveal & pixel glyph flicker
- * - 40-word brand story paragraph
- * - Subtle parallax & faint film grain overlay
+ * - SplitText character reveal + pixel glyph flicker effect
+ * - Refined brand story paragraph
  * - Full support for prefers-reduced-motion
  */
 export default function AboutSection({ isMobile }) {
@@ -75,7 +74,7 @@ export default function AboutSection({ isMobile }) {
       // =====================================================================
       if (!prefersReducedMotion && contentWrapperRef.current) {
         gsap.to(contentWrapperRef.current, {
-          y: isMobile ? 35 : 75,
+          y: isMobile ? 25 : 55,
           ease: 'none',
           scrollTrigger: {
             trigger: sectionRef.current,
@@ -90,18 +89,16 @@ export default function AboutSection({ isMobile }) {
       // 3. HEADLINE SPLITTEXT & REVEAL ANIMATION
       // =====================================================================
       if (headlineRef.current) {
-        // Use SplitText on the headline
         const split = new SplitText(headlineRef.current, {
           type: 'lines,chars',
-          linesClass: 'split-line overflow-hidden leading-[1.05]',
+          linesClass: 'split-line overflow-hidden leading-[0.94] pb-1',
           charsClass: 'split-char inline-block',
         });
 
-        // Trigger entrance when section enters view
         const enterTl = gsap.timeline({
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 60%',
+            start: 'top 65%',
             toggleActions: 'play none none reverse',
           },
         });
@@ -110,12 +107,12 @@ export default function AboutSection({ isMobile }) {
         enterTl.from(split.chars, {
           yPercent: 120,
           opacity: 0,
-          duration: prefersReducedMotion ? 0.4 : 0.75,
-          stagger: prefersReducedMotion ? 0 : 0.015,
+          duration: prefersReducedMotion ? 0.35 : 0.7,
+          stagger: prefersReducedMotion ? 0 : 0.012,
           ease: 'power3.out',
         });
 
-        // Optional Pixel Flicker Effect (skipped on reduced motion)
+        // Pixel Flicker Effect (skipped on reduced motion)
         if (!prefersReducedMotion) {
           const pixelGlyphs = ['█', '░', '▒', '▓', '#', '$', '%', '*', '+', '?', '0', '1', 'X', 'Z'];
 
@@ -123,9 +120,8 @@ export default function AboutSection({ isMobile }) {
             const originalChar = charEl.textContent;
             if (originalChar === ' ' || !originalChar.trim()) return;
 
-            // Trigger flicker slightly before or as character slides in
-            const flickerDelay = 0.1 + idx * 0.014;
-            const flickerDuration = 0.38; // ~0.4s
+            const flickerDelay = 0.08 + idx * 0.012;
+            const flickerDuration = 0.35;
             let step = 0;
             const maxSteps = 4;
 
@@ -147,15 +143,15 @@ export default function AboutSection({ isMobile }) {
         // 4. Label and paragraph fade in after the headline with upward move
         enterTl.fromTo(
           [labelRef.current, paragraphRef.current],
-          { opacity: 0, y: 24 },
+          { opacity: 0, y: 20 },
           {
             opacity: 1,
             y: 0,
-            duration: 0.8,
-            stagger: 0.15,
+            duration: 0.75,
+            stagger: 0.12,
             ease: 'power2.out',
           },
-          '-=0.4'
+          '-=0.35'
         );
       }
     }, sectionRef);
@@ -167,7 +163,7 @@ export default function AboutSection({ isMobile }) {
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full min-h-screen flex items-center justify-center overflow-hidden py-24 px-6 sm:px-12 select-none"
+      className="relative w-full min-h-screen flex flex-col justify-start items-center overflow-hidden pt-28 sm:pt-32 md:pt-36 pb-20 px-4 sm:px-8 md:px-12 select-none"
       style={{ backgroundColor: '#F2F0EB' }}
     >
       {/* Background Transition Layer (Scrubbed to #0B0B0F with scroll) */}
@@ -180,38 +176,38 @@ export default function AboutSection({ isMobile }) {
         {/* Faint Film Grain Overlay at 4% opacity over dark background */}
         <div className="absolute inset-0 bg-grain opacity-40 pointer-events-none" />
 
-        {/* Subtle Ambient Brand Glows */}
-        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full bg-[#0A4DA3]/[0.05] blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/3 right-1/4 translate-x-1/2 translate-y-1/2 w-[450px] h-[450px] rounded-full bg-[#E32934]/[0.04] blur-3xl pointer-events-none" />
+        {/* Ambient Brand Glows behind headline */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] rounded-full bg-[#0A4DA3]/[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#E32934]/[0.05] blur-3xl pointer-events-none" />
       </div>
 
-      {/* Main Content Container (Centered single column with subtle parallax) */}
+      {/* Main Content Container (Shifted up with wider max-w for huge monumental typography) */}
       <div
         ref={contentWrapperRef}
-        className="relative z-10 max-w-4xl mx-auto flex flex-col items-center text-center px-4"
+        className="relative z-10 max-w-6xl w-full mx-auto flex flex-col items-center text-center -translate-y-2 sm:-translate-y-4 md:-translate-y-6"
       >
         {/* Top Label */}
         <div
           ref={labelRef}
-          className="mb-6 opacity-0"
+          className="mb-4 sm:mb-6 opacity-0"
         >
           <span
-            className="font-sans font-medium uppercase text-xs sm:text-sm tracking-[0.2em] text-[#9A9AA3] inline-flex items-center gap-2.5"
+            className="font-sans font-semibold uppercase text-xs sm:text-sm tracking-[0.22em] text-[#9A9AA3] inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0A4DA3]" />
+            <span className="w-2 h-2 rounded-full bg-[#0A4DA3] animate-pulse" />
             ABOUT PEPSI
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E32934]" />
+            <span className="w-2 h-2 rounded-full bg-[#E32934]" />
           </span>
         </div>
 
-        {/* Big Pixel Headline (Fits in 3 lines on desktop, clamp(2.5rem, 6vw, 6rem), line-height 1.05) */}
-        <div className="w-full mb-8">
+        {/* Monumental Pixel Headline (Very big, bright white, high contrast, positioned up) */}
+        <div className="w-full mb-6 sm:mb-8">
           <h2
             ref={headlineRef}
-            className="font-pixel font-bold text-[#F2F0EB] text-center uppercase tracking-tight"
+            className="font-pixel font-black text-white text-center uppercase tracking-tight drop-shadow-[0_12px_40px_rgba(0,0,0,0.9)]"
             style={{
-              fontSize: 'clamp(2.5rem, 5.8vw, 6rem)',
-              lineHeight: 1.05,
+              fontSize: 'clamp(3.2rem, 7.8vw, 8.2rem)',
+              lineHeight: 0.94,
               wordBreak: 'break-word',
             }}
           >
@@ -221,12 +217,12 @@ export default function AboutSection({ isMobile }) {
           </h2>
         </div>
 
-        {/* Brand Story Paragraph (max-width 560px, centered, Space Grotesk, color #B8B8C0, ~40 words) */}
+        {/* Brand Story Paragraph (Slightly larger, crisp legibility, max-width 640px) */}
         <div
           ref={paragraphRef}
-          className="max-w-[560px] opacity-0 mx-auto"
+          className="max-w-[640px] opacity-0 mx-auto px-4"
         >
-          <p className="font-sans text-sm sm:text-base md:text-lg text-[#B8B8C0] leading-relaxed font-normal">
+          <p className="font-sans text-base sm:text-lg md:text-xl text-[#C8C8D2] leading-relaxed font-normal">
             Born in 1898 from a bold North Carolina apothecary, Pepsi revolutionized
             modern refreshment. Today, we push boundaries at the intersection of raw
             sonic energy, street culture, and ice-cold fizz—engineered for those who
@@ -234,13 +230,13 @@ export default function AboutSection({ isMobile }) {
           </p>
         </div>
 
-        {/* Small Bottom Accent Pill */}
-        <div className="mt-10 inline-flex items-center gap-4 text-[10px] font-mono tracking-widest text-[#9A9AA3]/60 uppercase border-t border-white/10 pt-4">
-          <span>SINCE 1898</span>
+        {/* Bottom Accent Pill / Feature Bar */}
+        <div className="mt-8 sm:mt-12 inline-flex items-center gap-4 text-xs font-mono tracking-widest text-[#9A9AA3] uppercase border-t border-white/10 pt-4">
+          <span className="text-[#38bdf8] font-bold">EST. 1898</span>
           <span>•</span>
-          <span>ELECTRIC REFRESHMENT</span>
+          <span>RAW SONIC ENERGY</span>
           <span>•</span>
-          <span>COLD AT CORE</span>
+          <span className="text-[#E32934] font-bold">ICE-COLD CORE</span>
         </div>
       </div>
     </section>
