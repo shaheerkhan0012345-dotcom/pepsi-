@@ -4,7 +4,7 @@ An award-winning 3D hero section concept website for Pepsi built with **React**,
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Starts And Lets Go
 
 ### 1. Installation
 Install all required dependencies:
