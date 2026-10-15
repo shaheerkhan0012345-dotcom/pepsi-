@@ -1,6 +1,6 @@
 # PEPSI® // REFRESH THE FUTURE — 3D Award-Style Hero Concept
 
-An award-winning 3D hero section concept website for Pepsi built with **React**, **Vite**, **Tailwind CSS**, **Three.js** via **@react-three/fiber** and **@react-three/drei**, **GSAP + ScrollTrigger**, and **Lenis** smooth scrolling.Help Through Ai
+An award-winning 3D hero section concept website for Pepsi built with **React**, **Vite**, **Tailwind CSS**, **Three.js** via **@react-three/fiber** and **@react-three/drei**, **GSAP + ScrollTrigger**, and **Lenis** smooth scrolling.Help Through Ai And Enjoy
 
 ---
 
